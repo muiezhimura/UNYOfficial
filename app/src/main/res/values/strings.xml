@@ -1,3 +1,10 @@
 <resources>
     <string name="app_name">UNY Official</string>
+    <string name="title_news">PENJELASAN PERUBAHAN STATUS BIDIKMISI BAGI MAHASISWA BIDIKMISI ANGKATAN 2017</string>
+    <string name="desc_news">description</string>
+    <string name="transition">transition</string>
+    <string name="creator_news">crete by</string>
+
+    <string name="date">10 Oct</string>
+
 </resources>
