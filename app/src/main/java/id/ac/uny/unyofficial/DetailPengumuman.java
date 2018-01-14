@@ -1,10 +1,16 @@
 package id.ac.uny.unyofficial;
 
 import android.content.Intent;
+import android.net.Network;
+import android.net.NetworkInfo;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.webkit.WebView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -12,6 +18,7 @@ import android.widget.Toast;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 
 import java.io.IOException;
 import java.text.ParseException;
@@ -37,9 +44,11 @@ public class DetailPengumuman extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail_pengumuman);
 
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar_detail_pengumuman);
+        setSupportActionBar(toolbar);
+
         baseUrl = getResources().getString(R.string.base_url);
         sourceUrl = getResources().getString(R.string.pengumuman_item);
-        Log.d("detailPeng", "sourceurl: "+ sourceUrl);
 
         mTitle = (TextView) findViewById(R.id.detail_pengumuman_title);
         mPostDate = (TextView) findViewById(R.id.detail_pengumuman_date);
@@ -48,16 +57,65 @@ public class DetailPengumuman extends AppCompatActivity {
         Intent intent = getIntent();
         urlId = intent.getStringExtra("id.ac.uny.unyofficial.pengumuman_item_id").replaceAll("^/+", "");
         sourceUrl = String.format(sourceUrl, urlId);
-        Log.d("detailPeng", "sourceUrl pengumuman : "+ sourceUrl);
 
         mDB = new PengumumanListOpenHelper(this);
 
-        JsoupAsyncTask jat = new JsoupAsyncTask();
-        jat.execute();
+
+        pengumuman = mDB.getPengumumanByUrlId(urlId);
+        updatePengumuman();
+
+        loadContent(false);
+
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+    }
+
+    protected void loadContent(final boolean forceGet) {
+        NetworkInfoHelper nih = new NetworkInfoHelper();
+        nih.doIfConnected(new NetworkInfoHelper.OnConnectionCallback() {
+            @Override
+            public void onConnectionSuccess() {}
+
+            @Override
+            public void onConnectionFailed(String errorMessage) {}
+
+            @Override
+            public void onConnectionFinished(Boolean result, String errorMessage) {
+                JsoupAsyncTask jat = new JsoupAsyncTask(forceGet, result);
+                jat.execute();
+            }
+        });
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_detail_pengumuman, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch(item.getItemId()) {
+            case R.id.action_detail_refresh:
+                loadContent(true);
+                break;
+            case R.id.action_detail_open_link:
+                // Implicit intent
+                Intent intent = new Intent(Intent.ACTION_VIEW);
+                intent.setData(Uri.parse(sourceUrl));
+                startActivity(intent);
+                break;
+            default:
+                // Do nothing
+        }
+
+        return super.onOptionsItemSelected(item);
     }
 
     protected void updatePengumuman() {
         if(pengumuman != null) {
+            // Do we need to clear the contents first?
+            mContents.loadUrl("about:blank");
+
             mTitle.setText(pengumuman.getTitle());
             mPostDate.setText(pengumuman.getFormattedPostDate());
 
@@ -70,7 +128,6 @@ public class DetailPengumuman extends AppCompatActivity {
             mContents.getSettings().setUseWideViewPort(true);
 
             mContents.loadDataWithBaseURL(baseUrl, pengumuman.getContents(), "text/html; charset=utf-8", "UTF-8", null);
-            Log.d("contents", "updatePengumuman: "+pengumuman.getContents());
         }
     }
 
@@ -79,30 +136,28 @@ public class DetailPengumuman extends AppCompatActivity {
         protected Document htmlDocument;
         protected String htmlString;
         protected boolean forceGet = false;
+        protected boolean isConnected = true; // assume connected
         protected PengumumanModel cache;
-
-        public JsoupAsyncTask() {
-            this.forceGet = false;
-        }
 
         public JsoupAsyncTask(boolean forceGet) {
             this.forceGet = forceGet;
         }
 
+        public JsoupAsyncTask(boolean forceGet, boolean isConnected) {
+            this.forceGet = forceGet;
+            this.isConnected = isConnected;
+        }
+
         @Override
         protected Void doInBackground(Void... params) {
             PengumumanModel cache = mDB.getPengumumanByUrlId(urlId);
-            if(forceGet || cache == null) {
+            if((isConnected && forceGet) || cache == null || cache.getContents().trim().equals("")) {
                 useCache = false;
                 try {
-                    Log.d("jsoup_task", "requesting pengumuman item = " + sourceUrl);
                     htmlDocument = Jsoup.connect(sourceUrl).get();
                     htmlString = htmlDocument.outerHtml();
-//                Log.d("jsoup_task", "response dump\n" + htmlString);
                 } catch (IOException e) {
                     e.printStackTrace();
-//                Toast.makeText(DetailPengumuman.this, "An error occurred while loading", Toast.LENGTH_LONG).show();
-                    Log.d("jsoup_task", "error loading pengumuman");
                 }
             } else {
                 useCache = true;
@@ -125,8 +180,6 @@ public class DetailPengumuman extends AppCompatActivity {
                 Element content = htmlDocument.select("#block-system-main > .content").first();
 
                 String title = content.select("> .title a").first().text().trim();
-//            String urlId = content.select("> .title a").first().attr("href");
-//            urlId = urlId.substring(urlId.lastIndexOf("/")); // could also be sourceUrl
 
                 // Parse post date
                 Calendar cal = Calendar.getInstance();
@@ -135,23 +188,44 @@ public class DetailPengumuman extends AppCompatActivity {
                         elmDate.select(".month").first().text().trim() + " " +
                         elmDate.select(".year").first().text().trim();
                 try {
-                    cal.setTime(new SimpleDateFormat("d MMMM d, yy", Locale.ENGLISH).parse(rawDate));
+                    cal.setTime(new SimpleDateFormat("d MMMM yy", Locale.ENGLISH).parse(rawDate));
                 } catch (ParseException e) {
                     cal = null;
-//                e.printStackTrace();
                 }
 
                 String htmlContent = content.select(".node-pengumuman .field-item").first().html();
                 String plainContent = content.select(".node-pengumuman .field-item").first().text();
 
-                pengumuman = new PengumumanModel(title, cal, htmlContent, plainContent, urlId);
+                Elements additionalContent = content.select(".node-pengumuman > .field:nth-child(n+2)");
+                if(additionalContent.size() > 0) {
+                    String additional = "";
+                    for (Element elm : additionalContent) {
+                        for (Element elm2 : elm.select(".field-label, .field-item")) {
+                            additional += elm2.outerHtml();
+                            plainContent += elm2.text();
+                        }
+                    }
+
+                    // Wrap for bigger font size, so that something like a list of attachments
+                    // could be easily clicked
+                    htmlContent += String.format("<div style=\"font-size: 2em;\">%s</div>", additional);
+                }
+
+                if(pengumuman == null) {
+                    pengumuman = new PengumumanModel(title, cal, htmlContent, plainContent, urlId);
+                } else {
+                    pengumuman.title = title;
+                    pengumuman.contents = htmlContent;
+                    pengumuman.plainContents = plainContent;
+                }
                 // Update to database as cache
                 if (mDB.checkExists(urlId)) {
                     int affectedRows = mDB.update(pengumuman);
                 }
 
-                updatePengumuman();
             }
+
+            updatePengumuman();
         }
     }
 }

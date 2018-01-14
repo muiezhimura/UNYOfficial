@@ -48,6 +48,7 @@ public class IndexPengumuman extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_index_pengumuman);
+        setTitle(R.string.title_pengumuman_list);
 
         sourceUrl = getResources().getString(R.string.pengumuman_list);
 
@@ -58,12 +59,24 @@ public class IndexPengumuman extends AppCompatActivity {
         mDB = new PengumumanListOpenHelper(this);
 
         page = 1;
-        JsoupAsyncTask jat = new JsoupAsyncTask();
-        jat.execute();
+        loadContent();
+    }
 
-        long owew = mDB.count();
-        Log.d("qwerty", "onCreate: "+ mDB.getDatabaseName());
-        Log.d("qwerty", "onCreate: what we get... "+ owew);
+    protected void loadContent() {
+        NetworkInfoHelper nih = new NetworkInfoHelper();
+        nih.doIfConnected(new NetworkInfoHelper.OnConnectionCallback() {
+            @Override
+            public void onConnectionSuccess() {}
+
+            @Override
+            public void onConnectionFailed(String errorMessage) {}
+
+            @Override
+            public void onConnectionFinished(Boolean result, String errorMessage) {
+                JsoupAsyncTask jat = new JsoupAsyncTask(page, result);
+                jat.execute();
+            }
+        });
     }
 
     protected void updateList(ArrayList<PengumumanModel> list) {
@@ -78,7 +91,6 @@ public class IndexPengumuman extends AppCompatActivity {
                 @Override
                 public void onClick(View v, int adapterPosition) {
                     PengumumanModel current = mAdapter.mPengList.get(adapterPosition);
-                    //Toast.makeText(IndexPengumuman.this, "click "+ current.title, Toast.LENGTH_LONG).show();
 
                     Intent intent = new Intent(v.getContext(), DetailPengumuman.class);
                     intent.putExtra("id.ac.uny.unyofficial.pengumuman_item_id", current.getUrlIdentifier());
@@ -117,10 +129,8 @@ public class IndexPengumuman extends AppCompatActivity {
                             return;
                         } else {
                             // End of list, request more content
-                            Log.d("jsoup_task", "requesting more content...");
-                            JsoupAsyncTask jat = new JsoupAsyncTask(++page);
-                            Log.d("jsoup_task", "page is now " + page);
-                            jat.execute();
+                            page++;
+                            loadContent();
                         }
                     }
                 }
@@ -130,7 +140,6 @@ public class IndexPengumuman extends AppCompatActivity {
             mAdapter.mergeList(list);
         }
 
-//        isLoading = false;
         setIsLoading(false);
     }
 
@@ -151,6 +160,7 @@ public class IndexPengumuman extends AppCompatActivity {
         protected boolean useCache;
         protected Document htmlDocument;
         protected String htmlString;
+        protected boolean isConnected = true; // assume connected
         protected ArrayList<PengumumanModel> cache;
 
         public JsoupAsyncTask() {
@@ -161,6 +171,16 @@ public class IndexPengumuman extends AppCompatActivity {
             this.page = Math.max(0, page - 1);
         }
 
+        public JsoupAsyncTask(boolean isConnected) {
+            this.page = 0;
+            this.isConnected = isConnected;
+        }
+
+        public JsoupAsyncTask(int page, boolean isConnected) {
+            this.page = Math.max(0, page - 1);
+            this.isConnected = isConnected;
+        }
+
         @Override
         protected Void doInBackground(Void... params) {
             if(!reachedEnd) {
@@ -168,7 +188,7 @@ public class IndexPengumuman extends AppCompatActivity {
                 cache = mDB.getPengumumanByPage(page);
 
                 // We will always want to populate the top results with up-to-date items
-                if(page == 0 || cache.size() == 0) {
+                if(isConnected && (page == 0 || cache.size() == 0)) {
                     Log.d("qwerty", "doInBackground: NOT use cache");
                     useCache = false;
                     try {
@@ -191,19 +211,17 @@ public class IndexPengumuman extends AppCompatActivity {
         protected void onPreExecute() {
             super.onPreExecute();
 
-//            isLoading = true;
             setIsLoading(true);
         }
 
         @Override
         protected void onPostExecute(Void result) {
             if(!reachedEnd) {
-                Log.d("qwerty", "generating content... "+ cache.size());
                 if(useCache) {
-                    Toast.makeText(IndexPengumuman.this, "new content for page " + page, Toast.LENGTH_LONG).show();
+                    // Toast.makeText(IndexPengumuman.this, "cache for page " + page, Toast.LENGTH_LONG).show();
                     updateList(cache);
                 } else {
-                    Toast.makeText(IndexPengumuman.this, "new content for page " + page, Toast.LENGTH_LONG).show();
+                    // Toast.makeText(IndexPengumuman.this, "new content for page " + page, Toast.LENGTH_LONG).show();
                     // Parse HTML and get contents
                     Elements elms = htmlDocument.select("#block-system-main .views-table > tbody > tr");
                     ArrayList<PengumumanModel> list = new ArrayList<>();
@@ -213,7 +231,7 @@ public class IndexPengumuman extends AppCompatActivity {
                         String title = elm.select(".views-field-title").first().text().trim();
 
                         String urlId = elm.select(".views-field-title a").first().attr("href");
-                        urlId = urlId.substring(urlId.lastIndexOf("/"));
+                        urlId = urlId.substring(urlId.lastIndexOf("/") + 1);
                         String postDateString = elm.select(".views-field-created").first().text().trim();
                         Calendar cal = Calendar.getInstance();
 
@@ -224,15 +242,12 @@ public class IndexPengumuman extends AppCompatActivity {
                         if (matchDate.find()) {
                             try {
                                 postDateString = matchDate.group(1);
-                                Log.d("post_date", "post date " + i + " acquired");
                                 cal.setTime(new SimpleDateFormat("MMMM d, yy - kk:mm", Locale.ENGLISH).parse(postDateString));
                             } catch (ParseException e) {
                                 cal = null;
-                                Log.d("post_date", "post date " + i + " fails. post date is " + postDateString);
                             }
                         } else {
                             cal = null;
-                            Log.d("post_date", "post date " + i + "no match");
                         }
 
                         PengumumanModel item = new PengumumanModel(title, cal, "", "", urlId);
@@ -242,6 +257,7 @@ public class IndexPengumuman extends AppCompatActivity {
                             long dbId = mDB.insert(item);
                             if (dbId > 0) {
                                 item.setDbId(dbId);
+                                PengumumanModel item2 = mDB.getPengumumanByUrlId(urlId);
                             }
                         }
                     }

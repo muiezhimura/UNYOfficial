@@ -96,7 +96,7 @@ public class PengumumanListOpenHelper extends SQLiteOpenHelper {
             if(cursor.moveToFirst()) {
                 do {
                     Calendar postDate = Calendar.getInstance();
-                    postDate.setTime(new Date(cursor.getLong(cursor.getColumnIndex(KEY_POST_DATE))));
+                    postDate.setTime(new Date(cursor.getLong(cursor.getColumnIndex(KEY_POST_DATE)) * 1000));
                     PengumumanModel item = new PengumumanModel(
                             cursor.getString(cursor.getColumnIndex(KEY_TITLE)),
                             postDate,
@@ -130,6 +130,7 @@ public class PengumumanListOpenHelper extends SQLiteOpenHelper {
             cursor = mReadableDB.rawQuery(query, new String[]{ urlId });
             if(cursor.moveToFirst()) {
                 Calendar postDate = Calendar.getInstance();
+                Log.d("asdf", "getPengumumanByUrlId: date is "+ cursor.getLong(cursor.getColumnIndex(KEY_POST_DATE)));
                 postDate.setTime(new Date(cursor.getLong(cursor.getColumnIndex(KEY_POST_DATE))));
                 item = new PengumumanModel(
                         cursor.getString(cursor.getColumnIndex(KEY_TITLE)),
@@ -141,7 +142,7 @@ public class PengumumanListOpenHelper extends SQLiteOpenHelper {
                 item.setDbId(cursor.getLong(cursor.getColumnIndex(KEY_ID)));
             }
         } catch (Exception e) {
-            Log.d("qwerty", "getPengumumanByPage: error "+ e.getMessage());
+            Log.d("qwerty", "getPengumumanByUrlId: error "+ e.getMessage());
         } finally {
             cursor.close();
             return item;
@@ -164,7 +165,7 @@ public class PengumumanListOpenHelper extends SQLiteOpenHelper {
             int total = cursor.getInt(cursor.getColumnIndex("total"));
             exists = total > 0;
         } catch (Exception e) {
-            Log.d("qwerty", "getTotalPengumuman: error query total: "+ e.getMessage());
+            Log.d("qwerty", "checkExists: error : "+ e.getMessage());
         } finally {
             cursor.close();
             return exists;
@@ -187,7 +188,7 @@ public class PengumumanListOpenHelper extends SQLiteOpenHelper {
             maxPostDate = Calendar.getInstance();
             maxPostDate.setTime(new Date(max));
         } catch (Exception e) {
-            Log.d("qwerty", "getMaxPostDate: error query total: "+ e.getMessage());
+            Log.d("qwerty", "getMaxPostDate: error query maxDate: "+ e.getMessage());
             return null;
         } finally {
             cursor.close();
@@ -205,7 +206,7 @@ public class PengumumanListOpenHelper extends SQLiteOpenHelper {
         if(postDate == null) {
             postDateLong = 0;
         } else {
-            postDateLong = postDate.getTime().getTime();
+            postDateLong = postDate.getTime().getTime(); // milliseconds to seconds
         }
 
         values.put(KEY_POST_DATE, postDateLong);
@@ -220,7 +221,7 @@ public class PengumumanListOpenHelper extends SQLiteOpenHelper {
 
             newId = mWritableDB.insert(PENGUMUMAN_LIST_TABLE, null, values);
         } catch(Exception e) {
-            Log.d(TAG, "insert: insert exception! "+ e.getMessage());
+            Log.d("qwerty", "insert: insert exception! "+ e.getMessage());
         }
 
         return newId;
@@ -237,7 +238,7 @@ public class PengumumanListOpenHelper extends SQLiteOpenHelper {
 
     // Can update urlIdentifier too if you supply ID.
     // If ID is not supplied then urlIdentifier is used as key
-    public int update(String title, Calendar postDate, String contents, String plainContents, String urlIdentifier, long dbId) {
+    public int update(String title, String contents, String plainContents, String urlIdentifier, long dbId) {
         int affectedRows = -1;
         try {
             if(mWritableDB == null) {
@@ -247,15 +248,11 @@ public class PengumumanListOpenHelper extends SQLiteOpenHelper {
             ContentValues values = new ContentValues();
             values.put(KEY_TITLE, title);
 
-            // Convert post date first
-            long postDateLong;
-            if(postDate == null) {
-                postDateLong = 0;
-            } else {
-                postDateLong = postDate.getTime().getTime();
-            }
+            // Post date can't be updated.
+            // Besides, it's suuuper weird that we can't get the time
+            // part from the specific Pengumuman's page. Only the date.
+            // Thus the entry from index-pengumuman is more accurate.
 
-            values.put(KEY_POST_DATE, postDateLong);
             values.put(KEY_CONTENTS, contents);
             values.put(KEY_PLAIN_CONTENTS, plainContents);
 
@@ -276,7 +273,7 @@ public class PengumumanListOpenHelper extends SQLiteOpenHelper {
                     whereParams
             );
         } catch (Exception e) {
-            Log.d(TAG, "update: update exception! "+ e.getMessage());
+            Log.d("qwerty", "update: update exception! "+ e.getMessage());
         }
 
         return affectedRows;
@@ -284,7 +281,6 @@ public class PengumumanListOpenHelper extends SQLiteOpenHelper {
 
     public int update(PengumumanModel pengumuman) {
         return this.update(pengumuman.getTitle(),
-                pengumuman.getPostDate(),
                 pengumuman.getContents(),
                 pengumuman.getPlainContents(),
                 pengumuman.getUrlIdentifier(),
