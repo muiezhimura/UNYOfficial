@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="base_url" type="urls">https://www.uny.ac.id</string>
+    <string name="pengumuman_list" type="urls">https://www.uny.ac.id/index-pengumuman</string>
+    <string name="pengumuman_item" type="urls">https://www.uny.ac.id/pengumuman/%s</string>
+</resources>

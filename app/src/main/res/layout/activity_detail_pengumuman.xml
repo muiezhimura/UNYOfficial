@@ -11,7 +11,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="10dp"></LinearLayout>
+        android:padding="10dp">
         <TextView
             android:id="@+id/detail_pengumuman_title"
             android:layout_width="match_parent"
@@ -24,8 +24,12 @@
             android:textSize="18sp"
             style="@style/pengumuman_date"/>
     </LinearLayout>
+
     <WebView
         android:id="@+id/detail_pengumuman_contents"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"></WebView>
+        android:layout_height="wrap_content"
+        android:fadeScrollbars="false"
+        android:scrollbarAlwaysDrawHorizontalTrack="true"
+        android:scrollbarAlwaysDrawVerticalTrack="true" />
 </LinearLayout>

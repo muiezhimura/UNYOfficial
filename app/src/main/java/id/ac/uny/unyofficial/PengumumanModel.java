@@ -14,24 +14,35 @@ public class PengumumanModel {
     public static String defaultDateFormat = "dd MMM yyyy, kk:mm";
     public static String defaultDateFormatShort = "dd-MM-yyyy kk:mm";
 
+    protected long dbId;
     protected String title;
     protected Calendar postDate;
     protected String contents;
+    protected String plainContents;
     protected String urlIdentifier;
 
-    public PengumumanModel(String title, Calendar postDate, String contents, String urlIdentifier) {
+    public PengumumanModel(String title, Calendar postDate, String contents, String plainContents, String urlIdentifier) {
         this.title = title;
         this.postDate = postDate;
         this.contents = contents;
+        this.plainContents = plainContents;
         this.urlIdentifier = urlIdentifier;
     }
 
-    public PengumumanModel(String title, String postDate, String contents, String urlIdentifier) {
+    public PengumumanModel(String title, Calendar postDate, String urlIdentifier) {
         this.title = title;
-        this.contents = contents;
+        this.postDate = postDate;
         this.urlIdentifier = urlIdentifier;
+        this.contents = "";
+        this.plainContents = "";
+    }
 
-        // Parse the postDate string here
+    public long getDbId() {
+        return dbId;
+    }
+
+    public void setDbId(long dbId) {
+        this.dbId = dbId;
     }
 
     public String getTitle() {
@@ -58,6 +69,10 @@ public class PengumumanModel {
 
     public String getContents() {
         return contents;
+    }
+
+    public String getPlainContents() {
+        return plainContents;
     }
 
     public String getUrlIdentifier() {

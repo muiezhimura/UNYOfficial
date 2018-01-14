@@ -1,7 +1,6 @@
 package id.ac.uny.unyofficial;
 
 import android.content.Context;
-import android.content.Intent;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -18,39 +17,50 @@ public class PengumumanListAdapter extends
         RecyclerView.Adapter<PengumumanListAdapter.PengumumanViewHolder> {
 
     protected ArrayList<PengumumanModel> mPengList;
+    private ArrayList<String> mUrlIds = new ArrayList<>();
     protected LayoutInflater mInflater;
+    protected onClickListener onClickListener;
+
+    public void setOnClickListener(PengumumanListAdapter.onClickListener onClickListener) {
+        this.onClickListener = onClickListener;
+    }
 
     public PengumumanListAdapter(Context context, ArrayList<PengumumanModel> pengList) {
         this.mInflater = LayoutInflater.from(context);
         this.mPengList = pengList;
+
+        for (PengumumanModel item: pengList) {
+            mUrlIds.add(item.getUrlIdentifier());
+        }
     }
 
     class PengumumanViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         public final TextView pengumumanItemTitle;
         public final TextView pengumumanItemDate;
         final PengumumanListAdapter mAdapter;
+        protected onClickListener onClickListener;
 
-        public PengumumanViewHolder(View itemView, PengumumanListAdapter adapter) {
+        public PengumumanViewHolder(View itemView, PengumumanListAdapter adapter, onClickListener onClickListener) {
             super(itemView);
 
             pengumumanItemTitle = (TextView) itemView.findViewById(R.id.pengumuman_item_title);
             pengumumanItemDate = (TextView) itemView.findViewById(R.id.pengumuman_item_date);
             this.mAdapter = adapter;
+            this.onClickListener = onClickListener;
+            itemView.setOnClickListener(this);
         }
 
         @Override
         public void onClick(View v) {
-            int mPosition = getLayoutPosition();
-            PengumumanModel current = mPengList.get(mPosition);
-
-            Intent intent = new Intent(v.getContext(), DetailPengumuman.class);
-            intent.putExtra("id.ac.uny.unyofficial.pengumuman_item_id", current.getUrlIdentifier());
+            if(onClickListener != null){
+                onClickListener.onClick(v, getAdapterPosition());
+            }
         }
     }
 
     public PengumumanViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View itemView = mInflater.inflate(R.layout.pengumuman_item, parent, false);
-        return new PengumumanViewHolder(itemView, this);
+        return new PengumumanViewHolder(itemView, this, onClickListener);
     }
 
     @Override
@@ -70,11 +80,19 @@ public class PengumumanListAdapter extends
             return;
         }
 
+        // Prevent duplicates
+        if(mUrlIds.size() > 0) {
+            for (PengumumanModel item : list) {
+                if(mUrlIds.contains(item.getUrlIdentifier())) {
+                    list.remove(item);
+                }
+            }
+        }
         mPengList.addAll(list);
         this.notifyDataSetChanged();
     }
 
     public interface onClickListener {
-        void onClick(String pengUrlIdentifier);
+        void onClick(View v, int adapterPosition);
     }
 }

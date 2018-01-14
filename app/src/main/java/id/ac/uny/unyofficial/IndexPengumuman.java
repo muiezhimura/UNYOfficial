@@ -1,5 +1,6 @@
 package id.ac.uny.unyofficial;
 
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -15,9 +16,9 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import org.w3c.dom.Text;
 
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -28,9 +29,9 @@ import java.util.regex.Pattern;
 
 public class IndexPengumuman extends AppCompatActivity {
 
-    protected Document htmlDocument;
-    protected String htmlString;
-    public String sourceUrl = "https://www.uny.ac.id/index-pengumuman";
+    public static final int DISPLAY_PER_PAGE = 20;
+
+    public String sourceUrl;
     protected int page;
     protected boolean isLoading = false;
     protected boolean reachedEnd = false;
@@ -40,18 +41,29 @@ public class IndexPengumuman extends AppCompatActivity {
     protected PengumumanListAdapter mAdapter;
     protected TextView mTextLoading;
 
+    // Database instance
+    PengumumanListOpenHelper mDB;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_index_pengumuman);
 
+        sourceUrl = getResources().getString(R.string.pengumuman_list);
+
         mRecyclerView = (RecyclerView) findViewById(R.id.recycler_view);
         mLayoutManager = new LinearLayoutManager(this);
         mTextLoading = (TextView) findViewById(R.id.text_loading);
 
+        mDB = new PengumumanListOpenHelper(this);
+
         page = 1;
         JsoupAsyncTask jat = new JsoupAsyncTask();
         jat.execute();
+
+        long owew = mDB.count();
+        Log.d("qwerty", "onCreate: "+ mDB.getDatabaseName());
+        Log.d("qwerty", "onCreate: what we get... "+ owew);
     }
 
     protected void updateList(ArrayList<PengumumanModel> list) {
@@ -62,6 +74,18 @@ public class IndexPengumuman extends AppCompatActivity {
         if(mAdapter == null) {
             // First time
             mAdapter = new PengumumanListAdapter(this, list);
+            mAdapter.setOnClickListener(new PengumumanListAdapter.onClickListener() {
+                @Override
+                public void onClick(View v, int adapterPosition) {
+                    PengumumanModel current = mAdapter.mPengList.get(adapterPosition);
+                    //Toast.makeText(IndexPengumuman.this, "click "+ current.title, Toast.LENGTH_LONG).show();
+
+                    Intent intent = new Intent(v.getContext(), DetailPengumuman.class);
+                    intent.putExtra("id.ac.uny.unyofficial.pengumuman_item_id", current.getUrlIdentifier());
+
+                    startActivity(intent);
+                }
+            });
             mRecyclerView.setAdapter(mAdapter);
             mRecyclerView.setLayoutManager(mLayoutManager);
 
@@ -124,6 +148,10 @@ public class IndexPengumuman extends AppCompatActivity {
     protected class JsoupAsyncTask extends AsyncTask<Void, Void, Void> {
 
         protected int page;
+        protected boolean useCache;
+        protected Document htmlDocument;
+        protected String htmlString;
+        protected ArrayList<PengumumanModel> cache;
 
         public JsoupAsyncTask() {
             this.page = 0;
@@ -136,13 +164,24 @@ public class IndexPengumuman extends AppCompatActivity {
         @Override
         protected Void doInBackground(Void... params) {
             if(!reachedEnd) {
-                try {
-                    Log.d("jsoup_task", "requesting to URL with page=" + page);
-                    htmlDocument = Jsoup.connect(sourceUrl).data("page", String.valueOf(this.page)).get();
-                    htmlString = htmlDocument.outerHtml();
-                    Log.d("jsoup_task", "response dump\n" + htmlString);
-                } catch (IOException e) {
-                    e.printStackTrace();
+                // Check cache first
+                cache = mDB.getPengumumanByPage(page);
+
+                // We will always want to populate the top results with up-to-date items
+                if(page == 0 || cache.size() == 0) {
+                    Log.d("qwerty", "doInBackground: NOT use cache");
+                    useCache = false;
+                    try {
+                        Log.d("jsoup_task", "requesting to URL with page=" + page);
+                        htmlDocument = Jsoup.connect(sourceUrl).data("page", String.valueOf(this.page)).get();
+                        htmlString = htmlDocument.outerHtml();
+                        Log.d("jsoup_task", "response dump\n" + htmlString);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    Log.d("qwerty", "doInBackground: use cache");
+                    useCache = true;
                 }
             }
             return null;
@@ -158,46 +197,61 @@ public class IndexPengumuman extends AppCompatActivity {
 
         @Override
         protected void onPostExecute(Void result) {
-            // Parse HTML and get contents
             if(!reachedEnd) {
-                Elements elms = htmlDocument.select("#block-system-main .views-table > tbody > tr");
-                ArrayList<PengumumanModel> list = new ArrayList<>();
-                Log.d("jsoup_task", "array size is " + elms.size());
-                for (int i = 0; i < elms.size(); i++) {
-                    Element elm = elms.get(i);
-                    String title = elm.select(".views-field-title").text().trim();
+                Log.d("qwerty", "generating content... "+ cache.size());
+                if(useCache) {
+                    Toast.makeText(IndexPengumuman.this, "new content for page " + page, Toast.LENGTH_LONG).show();
+                    updateList(cache);
+                } else {
+                    Toast.makeText(IndexPengumuman.this, "new content for page " + page, Toast.LENGTH_LONG).show();
+                    // Parse HTML and get contents
+                    Elements elms = htmlDocument.select("#block-system-main .views-table > tbody > tr");
+                    ArrayList<PengumumanModel> list = new ArrayList<>();
+                    Log.d("jsoup_task", "array size is " + elms.size());
+                    for (int i = 0; i < elms.size(); i++) {
+                        Element elm = elms.get(i);
+                        String title = elm.select(".views-field-title").first().text().trim();
 
-                    String urlId = elm.select(".views-field-title a").attr("href");
-                    urlId = urlId.substring(urlId.lastIndexOf("/"));
-                    String postDateString = elm.select(".views-field-created").text().trim();
-                    Calendar cal = Calendar.getInstance();
+                        String urlId = elm.select(".views-field-title a").first().attr("href");
+                        urlId = urlId.substring(urlId.lastIndexOf("/"));
+                        String postDateString = elm.select(".views-field-created").first().text().trim();
+                        Calendar cal = Calendar.getInstance();
 
-                    // Parse the date somehow
-                    Matcher matchDate = Pattern.compile("Post date.*?,\\s?(\\w+ \\d+, \\d{4} - \\d+:\\d+).*?",
-                            Pattern.CASE_INSENSITIVE).matcher(postDateString);
+                        // Parse the date somehow
+                        Matcher matchDate = Pattern.compile("Post date.*?,\\s?(\\w+ \\d+, \\d{4} - \\d+:\\d+).*?",
+                                Pattern.CASE_INSENSITIVE).matcher(postDateString);
 
-                    if (matchDate.find()) {
-                        try {
-                            postDateString = matchDate.group(1);
-                            Log.d("post_date", "post date " + i + " acquired");
-                            cal.setTime(new SimpleDateFormat("MMMM d, yyyy - kk:mm", Locale.ENGLISH).parse(postDateString));
-                        } catch (ParseException e) {
+                        if (matchDate.find()) {
+                            try {
+                                postDateString = matchDate.group(1);
+                                Log.d("post_date", "post date " + i + " acquired");
+                                cal.setTime(new SimpleDateFormat("MMMM d, yy - kk:mm", Locale.ENGLISH).parse(postDateString));
+                            } catch (ParseException e) {
+                                cal = null;
+                                Log.d("post_date", "post date " + i + " fails. post date is " + postDateString);
+                            }
+                        } else {
                             cal = null;
-                            Log.d("post_date", "post date " + i + " fails. post date is " + postDateString);
+                            Log.d("post_date", "post date " + i + "no match");
                         }
-                    } else {
-                        cal = null;
-                        Log.d("post_date", "post date " + i + "no match");
+
+                        PengumumanModel item = new PengumumanModel(title, cal, "", "", urlId);
+                        list.add(item);
+                        // Insert to database as cache
+                        if (!mDB.checkExists(urlId)) {
+                            long dbId = mDB.insert(item);
+                            if (dbId > 0) {
+                                item.setDbId(dbId);
+                            }
+                        }
                     }
 
-                    list.add(new PengumumanModel(title, cal, "", urlId));
-                }
+                    updateList(list);
 
-                updateList(list);
-
-                // Check, have we reached the end?
-                if(elms.size() == 0) {
-                    reachedEnd = true;
+                    // Check, have we reached the end?
+                    if (elms.size() == 0) {
+                        reachedEnd = true;
+                    }
                 }
             }
             isLoading = false;
