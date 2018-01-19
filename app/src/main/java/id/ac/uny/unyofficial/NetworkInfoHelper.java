@@ -19,9 +19,9 @@ public class NetworkInfoHelper {
         cnc.execute();
     }
 
-    protected class CheckNetworkConnection extends AsyncTask<Void, Void, Boolean> {
+    protected static class CheckNetworkConnection extends AsyncTask<Void, Void, Boolean> {
         protected OnConnectionCallback callback;
-        protected String message;
+        protected String message = "";
 
         public CheckNetworkConnection(OnConnectionCallback callback) {
             super();
@@ -44,6 +44,7 @@ public class NetworkInfoHelper {
         @Override
         protected void onPostExecute(Boolean result) {
             Log.d("qwerty", "connection result is: "+ result);
+            // result = false; // DEBUG ONLY
             if(result) {
                 callback.onConnectionSuccess();
             } else {

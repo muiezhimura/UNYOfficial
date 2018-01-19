@@ -3,6 +3,8 @@ package id.ac.uny.unyofficial;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -64,6 +66,7 @@ public class IndexPengumuman extends AppCompatActivity {
 
     protected void loadContent() {
         NetworkInfoHelper nih = new NetworkInfoHelper();
+        setIsLoading(true);
         nih.doIfConnected(new NetworkInfoHelper.OnConnectionCallback() {
             @Override
             public void onConnectionSuccess() {}
@@ -112,6 +115,7 @@ public class IndexPengumuman extends AppCompatActivity {
                 public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
                     super.onScrolled(recyclerView, dx, dy);
 
+                    Log.d("qwerty", "onScrolled: isLoading is "+ isLoading);
                     if(isLoading) {
                         return;
                     }
@@ -139,11 +143,10 @@ public class IndexPengumuman extends AppCompatActivity {
             // Subsequent calls; just merge the list
             mAdapter.mergeList(list);
         }
-
-        setIsLoading(false);
     }
 
     protected void setIsLoading(boolean isLoading) {
+        Log.d("qwertyu", "setIsLoading: SETTING ISLOAD TO "+ isLoading);
         this.isLoading = isLoading;
         if(isLoading) {
             mRecyclerView.setPadding(0, 0, 0, Math.round(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 30, getResources().getDisplayMetrics())));
@@ -200,7 +203,7 @@ public class IndexPengumuman extends AppCompatActivity {
                         e.printStackTrace();
                     }
                 } else {
-                    Log.d("qwerty", "doInBackground: use cache");
+                    Log.d("qwerty", "doInBackground: use cache, reached end = "+ reachedEnd);
                     useCache = true;
                 }
             }
@@ -219,7 +222,29 @@ public class IndexPengumuman extends AppCompatActivity {
             if(!reachedEnd) {
                 if(useCache) {
                     // Toast.makeText(IndexPengumuman.this, "cache for page " + page, Toast.LENGTH_LONG).show();
+                    Log.d("qwerty", "onPostExecute: cache is "+ cache +" with size "+ cache.size());
                     updateList(cache);
+                    for (PengumumanModel item : cache) {
+                        Log.d("qwerty", "onPostExecute: "+ item);
+                    }
+
+                    if(cache.size() == 0) {
+                        // Do we set the reachedEnd flag for cache?
+                        // I mean, we'd always want to check the connection first...
+                        // reachedEnd = true;
+                        Log.d("qwerty", "onPostExecute: da cache is empty");
+                    }
+
+                    // Set delay for next load so that when the user scrolls fast, there is
+                    // a delay, so the content doesn't get loaded too fast. This is to indicate to
+                    // the user that we ARE indeed loading content.
+                    // Timer code from https://stackoverflow.com/a/28173911
+                    new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            setIsLoading(false);
+                        }
+                    }, 1500);
                 } else {
                     // Toast.makeText(IndexPengumuman.this, "new content for page " + page, Toast.LENGTH_LONG).show();
                     // Parse HTML and get contents
@@ -268,10 +293,12 @@ public class IndexPengumuman extends AppCompatActivity {
                     if (elms.size() == 0) {
                         reachedEnd = true;
                     }
+
+                    setIsLoading(false);
                 }
+            } else {
+                setIsLoading(false);
             }
-            isLoading = false;
-            setIsLoading(false);
         }
     }
 }

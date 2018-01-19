@@ -96,7 +96,7 @@ public class PengumumanListOpenHelper extends SQLiteOpenHelper {
             if(cursor.moveToFirst()) {
                 do {
                     Calendar postDate = Calendar.getInstance();
-                    postDate.setTime(new Date(cursor.getLong(cursor.getColumnIndex(KEY_POST_DATE)) * 1000));
+                    postDate.setTime(new Date(cursor.getLong(cursor.getColumnIndex(KEY_POST_DATE))));
                     PengumumanModel item = new PengumumanModel(
                             cursor.getString(cursor.getColumnIndex(KEY_TITLE)),
                             postDate,
@@ -111,7 +111,7 @@ public class PengumumanListOpenHelper extends SQLiteOpenHelper {
         } catch (Exception e) {
             Log.d("qwerty", "getPengumumanByPage: error "+ e.getMessage());
         } finally {
-            cursor.close();
+            if(cursor != null) cursor.close();
             return list;
         }
     }
@@ -144,7 +144,7 @@ public class PengumumanListOpenHelper extends SQLiteOpenHelper {
         } catch (Exception e) {
             Log.d("qwerty", "getPengumumanByUrlId: error "+ e.getMessage());
         } finally {
-            cursor.close();
+            if(cursor != null) cursor.close();
             return item;
         }
     }
@@ -167,7 +167,7 @@ public class PengumumanListOpenHelper extends SQLiteOpenHelper {
         } catch (Exception e) {
             Log.d("qwerty", "checkExists: error : "+ e.getMessage());
         } finally {
-            cursor.close();
+            if(cursor != null) cursor.close();
             return exists;
         }
     }
@@ -191,7 +191,7 @@ public class PengumumanListOpenHelper extends SQLiteOpenHelper {
             Log.d("qwerty", "getMaxPostDate: error query maxDate: "+ e.getMessage());
             return null;
         } finally {
-            cursor.close();
+            if(cursor != null) cursor.close();
             return maxPostDate;
         }
     }

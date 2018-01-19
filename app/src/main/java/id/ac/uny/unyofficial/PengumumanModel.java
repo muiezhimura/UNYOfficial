@@ -79,4 +79,7 @@ public class PengumumanModel {
         return urlIdentifier;
     }
 
+    public String toString() {
+        return getClass().getName() + ": " + this.urlIdentifier + " | " + this.getFormattedPostDate();
+    }
 }
