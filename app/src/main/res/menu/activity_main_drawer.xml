@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:showIn="navigation_view">
+
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/beranda"
+            android:icon="@drawable/ic_menu_slideshow"
+            android:title="Beranda" />
+        <item
+            android:id="@+id/berita"
+            android:icon="@drawable/ic_news"
+            android:title="Berita" />
+        <item
+            android:id="@+id/pengumuman"
+            android:icon="@drawable/ic_pengumuman"
+            android:title="Pengumuman" />
+        <item
+            android:id="@+id/sejarah"
+            android:icon="@drawable/ic_sejarah"
+            android:title="Sejarah" />
+    </group>
+</menu>
