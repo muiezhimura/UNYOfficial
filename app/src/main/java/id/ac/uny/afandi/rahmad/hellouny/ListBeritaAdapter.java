@@ -2,6 +2,8 @@ package id.ac.uny.afandi.rahmad.hellouny;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.support.v4.view.GravityCompat;
+import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
@@ -45,11 +47,13 @@ class  ListBeritaAdapter extends RecyclerView.Adapter<ListBeritaAdapter.ViewHold
             @Override
             public void onClick(View v) {
                 AppCompatActivity compatActivity = (AppCompatActivity) v.getContext();
-//                DetailBeritaFragment detailBeritaFragment = new DetailBeritaFragment();
+                DetailBeritaFragment detailBeritaFragment = new DetailBeritaFragment();
                 Bundle bundle = new Bundle();
                 bundle.putString("url", list.get(position).getLink());
-//                detailBeritaFragment.setArguments(bundle);
-//                compatActivity.getFragmentManager().beginTransaction().replace(R.id.berita,detailBeritaFragment).commit();
+                detailBeritaFragment.setArguments(bundle);
+                compatActivity.getFragmentManager().beginTransaction().replace(R.id.content_main,detailBeritaFragment).commit();
+                DrawerLayout drawer = compatActivity.findViewById(R.id.drawer_layout);
+                drawer.closeDrawer(GravityCompat.START);
             }
         });
     }
