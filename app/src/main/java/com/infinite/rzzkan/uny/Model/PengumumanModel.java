@@ -7,17 +7,16 @@ import android.os.Parcelable;
  * Created by Rzzkan on 18/01/2018.
  */
 
-public class PengumumanModel implements Parcelable {
-    private String judul = "";
-    private String tanggal = "";
-    private String link = "";
+public class PengumumanModel {
 
-    public String getLink() {
-        return link;
-    }
+    private String judul;
+    private String link;
+    private String tanggal;
 
-    public void setLink(String link) {
+    public PengumumanModel(String judul, String link, String tanggal) {
+        this.judul = judul;
         this.link = link;
+        this.tanggal = tanggal;
     }
 
     public String getJudul() {
@@ -28,6 +27,13 @@ public class PengumumanModel implements Parcelable {
         this.judul = judul;
     }
 
+    public String getLink() {
+        return link;
+    }
+
+    public void setLink(String link) {
+        this.link = link;
+    }
 
     public String getTanggal() {
         return tanggal;
@@ -36,46 +42,4 @@ public class PengumumanModel implements Parcelable {
     public void setTanggal(String tanggal) {
         this.tanggal = tanggal;
     }
-
-
-    @Override
-    public int describeContents() {
-        return 0;
-    }
-
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(judul);
-        dest.writeString(tanggal);
-        dest.writeString(link);
-    }
-
-    public PengumumanModel() {
-        super();
-    }
-
-
-    protected PengumumanModel(Parcel in) {
-        this();
-        readFromParcel(in);
-    }
-
-    public void readFromParcel(Parcel in) {
-        this.judul = in.readString();
-        this.tanggal = in.readString();
-        this.link = in.readString();
-
-    }
-
-    public static final Parcelable.Creator<PengumumanModel> CREATOR = new Parcelable.Creator<PengumumanModel>() {
-        @Override
-        public PengumumanModel createFromParcel(Parcel in) {
-            return new PengumumanModel(in);
-        }
-
-        @Override
-        public PengumumanModel[] newArray(int size) {
-            return new PengumumanModel[size];
-        }
-    };
 }

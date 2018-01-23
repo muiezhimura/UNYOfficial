@@ -15,6 +15,7 @@ import android.support.v7.widget.RecyclerView;
 
 import com.infinite.rzzkan.uny.DetailsActivity;
 import com.infinite.rzzkan.uny.Interface.OnVideoClickListener;
+import com.infinite.rzzkan.uny.Model.BeritaModel;
 import com.infinite.rzzkan.uny.R;
 import com.infinite.rzzkan.uny.Adapter.VideoAdapter;
 import com.infinite.rzzkan.uny.Model.VideoModel;
@@ -33,6 +34,10 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+
 /**
  * A simple {@link Fragment} subclass.
  */
@@ -42,7 +47,7 @@ public class VideoFragment extends Fragment {
     private static String URL = "https://www.googleapis.com/youtube/v3/search?part=snippet&order=date";
     private static String RESULT = "&maxResults=20";
     private static String PAGE_TOKEN = "&pageToken=";
-    private String Token = "";
+    private static String Token = "";
 
     private RecyclerView mList_videos = null;
     private VideoAdapter adapter = null;
@@ -60,24 +65,24 @@ public class VideoFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_video, container, false);
+        getActivity().setTitle("Video UNY");
         mList_videos = (RecyclerView) view.findViewById(R.id.mList_videos);
+        Token ="";
+        linearLayoutManager = new LinearLayoutManager(getActivity());
         initList(mListData);
         new RequestYoutubeAPI().execute();
-
-        linearLayoutManager = new LinearLayoutManager(getActivity());
         mList_videos.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
                 if(linearLayoutManager.findLastCompletelyVisibleItemPosition() == mListData.size()-1){
-                   // Token = Token;
+                    Token = Token;
                     new RequestYoutubeAPI().execute();
                 }
             }
         });
-
         return view;
     }
-
+//
     private void initList(ArrayList<VideoModel> mListData) {
         mList_videos.setLayoutManager(linearLayoutManager);
         adapter = new VideoAdapter(getActivity(), mListData, new OnVideoClickListener() {
@@ -92,6 +97,74 @@ public class VideoFragment extends Fragment {
         mList_videos.setAdapter(adapter);
 
     }
+
+//    private void loadMyContent(final String id) {
+//        AsyncTask<Integer,Void,Void> task =new AsyncTask<Integer, Void, Void>() {
+//            @Override
+//            protected Void doInBackground(Integer... integers) {
+//                OkHttpClient client = new OkHttpClient();
+//                Request request = new Request.Builder()
+//                        .url(URL + CHANNEL_ID + RESULT + PAGE_TOKEN + id +GOOGLE_YOUTUBE_API_KEY)
+//                        .build();
+//                try {
+//                    Response response = client.newCall(request).execute();
+//                    JSONObject jsonObject = new JSONObject(response.body().string());
+//                    if (jsonObject.has("nextPageToken")){
+//                        try {
+//                            Token = jsonObject.getString("nextPageToken");
+//                        } catch (JSONException e) {
+//                            e.printStackTrace();
+//                        }
+//                    }
+//
+//                    if (jsonObject.has("items")) {
+//                        try {
+//                            JSONArray jsonArray = jsonObject.getJSONArray("items");
+//                            for (int i = 0; i < jsonArray.length(); i++) {
+//                                JSONObject json = jsonArray.getJSONObject(i);
+//                                if (json.has("id")) {
+//                                    JSONObject jsonID = json.getJSONObject("id");
+//                                    String video_id = "";
+//                                    if (jsonID.has("videoId")) {
+//                                        video_id = jsonID.getString("videoId");
+//                                    }
+//                                    if (jsonID.has("kind")) {
+//                                        if (jsonID.getString("kind").equals("youtube#video")) {
+//
+//                                            JSONObject jsonSnippet = json.getJSONObject("snippet");
+//                                            String title = jsonSnippet.getString("title");
+//                                            String description = jsonSnippet.getString("description");
+//                                            String publishedAt = jsonSnippet.getString("publishedAt");
+//                                            String thumbnail = jsonSnippet.getJSONObject("thumbnails").getJSONObject("high").getString("url");
+//
+//                                            VideoModel youtubeObject = new VideoModel(title,description,publishedAt,thumbnail,video_id,Token);
+//                                            mListData.add(youtubeObject);
+//
+//                                        }
+//                                    }
+//                                }
+//
+//                            }
+//                        } catch (JSONException e) {
+//                            e.printStackTrace();
+//                        }
+//                    }
+//                } catch (JSONException e) {
+//                    System.out.println(e.getMessage());
+//                } catch (IOException e) {
+//                    System.out.println("End of Content");
+//                }
+//                return null;
+//            }
+//
+//            @Override
+//            protected void onPostExecute(Void aVoid) {
+//                adapter.notifyDataSetChanged();
+//            }
+//        };
+//        task.execute();
+//    }
+
 
 
     //create an asynctask to get all the data from youtube
@@ -136,7 +209,7 @@ public class VideoFragment extends Fragment {
     }
 
     public ArrayList<VideoModel> parseVideoListFromResponse(JSONObject jsonObject) {
-        ArrayList<VideoModel> mList = new ArrayList<>();
+       // ArrayList<VideoModel> mList = new ArrayList<>();
         if (jsonObject.has("nextPageToken")){
             try {
                 Token = jsonObject.getString("nextPageToken");
@@ -171,7 +244,7 @@ public class VideoFragment extends Fragment {
                                 youtubeObject.setThumbnail(thumbnail);
                                 youtubeObject.setVideo_id(video_id);
                                 youtubeObject.setPage_token(Token);
-                                mList.add(youtubeObject);
+                                mListData.add(youtubeObject);
 
                             }
                         }
@@ -183,7 +256,7 @@ public class VideoFragment extends Fragment {
             }
         }
 
-        return mList;
+        return mListData;
 
     }
 

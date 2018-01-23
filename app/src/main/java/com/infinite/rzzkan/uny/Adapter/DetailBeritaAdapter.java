@@ -9,29 +9,29 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.infinite.rzzkan.uny.Model.BeritaDetailModel;
+import com.infinite.rzzkan.uny.Model.DetailBeritaModel;
 import com.infinite.rzzkan.uny.R;
 import com.squareup.picasso.Picasso;
 
 import java.util.List;
 
 /**
- * Created by Rzzkan on 19/01/2018.
+ * Created by Rzzkan on 22/01/2018.
  */
 
-public class BeritaDetailAdapter extends RecyclerView.Adapter<BeritaDetailAdapter.ViewHolder> {
+public class DetailBeritaAdapter extends RecyclerView.Adapter<DetailBeritaAdapter.ViewHolder> {
 
     private Context context;
-    private List<BeritaDetailModel> list;
+    private List<DetailBeritaModel> list;
 
-    public BeritaDetailAdapter(Context context, List<BeritaDetailModel> list) {
+    public DetailBeritaAdapter(Context context, List<DetailBeritaModel> list) {
         this.context = context;
         this.list = list;
     }
 
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View itemView = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_berita_detail_layout,parent,false);
+        View itemView = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_detail_berita_layout,parent,false);
 
         return new ViewHolder(itemView);
     }

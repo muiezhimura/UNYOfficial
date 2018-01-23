@@ -15,9 +15,11 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.infinite.rzzkan.uny.Adapter.BeritaAdapter;
+import com.infinite.rzzkan.uny.Adapter.PengumumanAdapter;
 import com.infinite.rzzkan.uny.DetailsActivity;
 import com.infinite.rzzkan.uny.Interface.OnBeritaClickListener;
 import com.infinite.rzzkan.uny.Model.BeritaModel;
+import com.infinite.rzzkan.uny.Model.PengumumanModel;
 import com.infinite.rzzkan.uny.R;
 
 import org.apache.http.HttpEntity;
@@ -59,16 +61,19 @@ public class BeritaFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_berita, container, false);
+        getActivity().setTitle("Berita UNY");
         mList_berita = (RecyclerView) view.findViewById(R.id.mList_berita);
-        new RequestAPI().execute();
-        initList(mListData);
+        loadMyContent(page);
         linearLayoutManager = new LinearLayoutManager(getActivity());
+        mList_berita.setLayoutManager(linearLayoutManager);
+        adapter = new BeritaAdapter(getActivity(),mListData);
+        mList_berita.setAdapter(adapter);
         mList_berita.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
                 if(linearLayoutManager.findLastCompletelyVisibleItemPosition() == mListData.size()-1){
                     page+=1;
-                    new RequestAPI().execute();
+                    loadMyContent(page);
                 }
             }
         });
@@ -76,85 +81,42 @@ public class BeritaFragment extends Fragment {
         return view;
     }
 
-    private void initList(final ArrayList<BeritaModel> mListData) {
-        mList_berita.setLayoutManager(linearLayoutManager);
-        adapter = new BeritaAdapter(getActivity(), mListData, new OnBeritaClickListener() {
+
+    private void loadMyContent(final int id) {
+        AsyncTask<Integer,Void,Void> task =new AsyncTask<Integer, Void, Void>() {
             @Override
-            public void onBeritaClick(BeritaModel item) {
-               BeritaModel beritaDataModel = item;
-                Intent intent = new Intent(getActivity(), DetailsActivity.class);
-                intent.putExtra(BeritaModel.class.toString(), beritaDataModel);
-                startActivity(intent);
-            }
-        });
-
-        mList_berita.setAdapter(adapter);
-
-    }
-
-    //create an asynctask to get all the data
-    private class RequestAPI extends AsyncTask<Void, String, String> {
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-        }
-
-        @Override
-        protected String doInBackground(Void... params) {
-            HttpClient httpClient = new DefaultHttpClient();
-            HttpGet httpGet = new HttpGet(API_URL + page );
-            Log.e("URL", API_URL+ page);
-            try {
-                HttpResponse response = httpClient.execute(httpGet);
-                HttpEntity httpEntity = response.getEntity();
-                String json = EntityUtils.toString(httpEntity);
-                return json;
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(String response) {
-            super.onPostExecute(response);
-            if (response != null) {
+            protected Void doInBackground(Integer... integers) {
+                OkHttpClient client = new OkHttpClient();
+                Request request = new Request.Builder()
+                        .url("http://api.ngeartstudio.com/berita/"+id)
+                        .build();
                 try {
-                    JSONObject jsonObject = new JSONObject(response);
-                    Log.e("response", jsonObject.toString());
-                    mListData = parseBeritaListFromResponse(jsonObject);
-                    initList(mListData);
+                    Response response = client.newCall(request).execute();
+                    JSONObject object = new JSONObject(response.body().string());
+                    JSONArray jsonArray = object.getJSONArray("berita");
+                    for (int i = 0; i < jsonArray.length(); i++) {
+                        JSONObject json = jsonArray.getJSONObject(i);
+                        String judul = json.getString("judul");
+                        String tanggal = json.getString("tanggal");
+                        String link = json.getString("link");
+                        String gambar = json.getString("gambar");
+
+                        BeritaModel beritaObject = new BeritaModel(judul,link,gambar,tanggal);
+                        mListData.add(beritaObject);
+                    }
                 } catch (JSONException e) {
-                    e.printStackTrace();
+                    System.out.println(e.getMessage());
+                } catch (IOException e) {
+                    System.out.println("End of Content");
                 }
+                return null;
             }
-        }
-    }
 
-    public ArrayList<BeritaModel> parseBeritaListFromResponse(JSONObject jsonObject) {
-        try {
-            JSONArray jsonArray = jsonObject.getJSONArray("berita");
-            for (int i = 0; i < jsonArray.length(); i++) {
-                JSONObject json = jsonArray.getJSONObject(i);
-                BeritaModel beritaObject = new BeritaModel();
-                String judul = json.getString("judul");
-                String tanggal = json.getString("tanggal");
-                String link = json.getString("link");
-                String gambar = json.getString("gambar");
-
-                beritaObject.setJudul(judul);
-                beritaObject.setTanggal(tanggal);
-                beritaObject.setLink(link);
-                beritaObject.setGambar(gambar);
-                mListData.add( beritaObject);
+            @Override
+            protected void onPostExecute(Void aVoid) {
+                adapter.notifyDataSetChanged();
             }
-        }catch (JSONException e) {
-            e.printStackTrace();
-        }
-        return mListData;
-
+        };
+        task.execute(id);
     }
-
 }

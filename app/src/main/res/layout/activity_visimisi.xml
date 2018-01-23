@@ -1,0 +1,142 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context="com.infinite.rzzkan.uny.VisimisiActivity">
+
+    <!-- TODO: Update blank fragment layout -->
+
+    <TextView
+        android:id="@+id/textView9"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="8dp"
+        android:layout_marginRight="8dp"
+        android:text="VISI, MISI DAN TUJUAN TAHUN 2025 "
+        android:textColor="@color/black"
+        android:textSize="18sp" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:layout_marginLeft="8dp"
+            android:layout_marginRight="8dp"
+            android:layout_marginTop="8dp"
+            android:orientation="vertical"
+            android:paddingBottom="12dp">
+
+            <TextView
+                android:id="@+id/textView10"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="5dp"
+                android:layout_marginTop="5dp"
+                android:text="Visi pada tahun 2025 UNY menjadi universitas kependidikan kelas dunia berlandaskan ketaqwaan, kemandirian dan kecendekiaan."
+                android:textColor="@color/black"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/textView11"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="5dp"
+                android:layout_marginTop="5dp"
+                android:text="Misi Universitas adalah mendidik manusia dan masyarakat Indonesia dengan :"
+                android:textColor="@color/black"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/textView12"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="2dp"
+                android:layout_marginLeft="10dp"
+                android:text="1. Menyelenggarakan pendidikan akademik, profesi, dan vokasi dalam bidang kependidikan yang didukung bidang nonkependidikan untuk menghasilkan manusia unggul yang mengutamakan ketaqwaan, kemandirian, dan kecendikian."
+                android:textColor="@color/black" />
+
+            <TextView
+                android:id="@+id/textView13"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="2dp"
+                android:layout_marginLeft="10dp"
+                android:text="2. Menyelenggarakan kegiatan penelitian untuk menemukan, mengembangkan, dan menyebarluaskan ilmu pengetahuan, teknologi, seni dan/atau olahraga, yang menyejahterakan individu dan masyarakat, dan mendukung pembangunan daerah dan nasional, serta berkontribusi pada pemecahan masalah global."
+                android:textColor="@color/black" />
+
+            <TextView
+                android:id="@+id/textView14"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="2dp"
+                android:layout_marginLeft="10dp"
+                android:text="3. Menyelenggarakankegiatan pengabdian dan pemberdayaan masyarakat yang mendorong pengembangan potensi manusia, masyarakat, dan alam untuk mewujudkan kesejahteraan masyarakat."
+                android:textColor="@color/black" />
+
+            <TextView
+                android:id="@+id/textView15"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="2dp"
+                android:layout_marginLeft="10dp"
+                android:text="4. Menyelenggarakan tata kelola universitas yang baik, bersih, dan akuntabel dalam pelaksanaan otonomi perguruan tinggi."
+                android:textColor="@color/black" />
+
+            <TextView
+                android:id="@+id/textView16"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="5dp"
+                android:layout_marginTop="5dp"
+                android:text="Penyelenggaraan Kegiatan di UNY bertujuan untuk :"
+                android:textColor="@color/black"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/textView17"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="2dp"
+                android:layout_marginLeft="10dp"
+                android:text="1. Terwujudnya manusia yang betaqwa, mandiri, dan cendekia yang menjunjung tinggi nilai-nilai Pancasila."
+                android:textColor="@color/black" />
+
+            <TextView
+                android:id="@+id/textView18"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="2dp"
+                android:layout_marginLeft="10dp"
+                android:text="2. Terwujudnya penemuan, pengembangan, dan penyebarluasan ilmu pengetahuan, teknologi, seni, dan/atau olahraga yang mendukung pembangunan daerah dan nasional, serta berkontribusi pada pemecahan masalah global."
+                android:textColor="@color/black" />
+
+            <TextView
+                android:id="@+id/textView19"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="2dp"
+                android:layout_marginLeft="10dp"
+                android:text="3. Terselenggaranya kegiatan pengabdian dan pemberdayaan masyarakat yang mendorong pengembangan potensi manusia, masyarakat, dan alam untuk mewujudkan kesejahteraan masyarakat."
+                android:textColor="@color/black" />
+
+            <TextView
+                android:id="@+id/textView20"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="2dp"
+                android:layout_marginLeft="10dp"
+                android:text="4.  Terwujudnya tata kelola universitas yang baik, bersih, dan akuntabel dalam pelaksanaan otonomi perguruan tinggi."
+                android:textColor="@color/black" />
+        </LinearLayout>
+    </ScrollView>
+
+</LinearLayout>
